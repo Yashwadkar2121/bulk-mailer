@@ -1,12 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  MailPlus,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
+  Sparkles,
+  User,
+  Bell,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { AnimatedButton } from "./AnimatedButton";
 
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: "📊" },
-  { path: "/campaign/new", label: "New Campaign", icon: "✉️" },
-  { path: "/settings", label: "Settings", icon: "⚙️" },
+  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/campaign/new", label: "New Campaign", icon: MailPlus },
+  { path: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Layout({ children }) {
@@ -14,6 +27,13 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -21,45 +41,42 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-rose-950/30 to-slate-900">
-      {/* Mobile menu button */}
-      <div className="fixed top-4 left-4 z-50 lg:hidden">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-xl bg-slate-800/80 backdrop-blur-sm border border-pink-500/30 text-pink-400"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950/30 to-slate-900">
+      {/* Mobile Header */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-40 lg:hidden transition-all duration-300 ${scrolled ? "bg-slate-900/80 backdrop-blur-xl border-b border-pink-500/20" : "bg-transparent"}`}
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-100">BulkMailer</span>
+          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 rounded-lg bg-slate-800/50 text-pink-400"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </motion.button>
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Sidebar - Desktop */}
+      {/* Desktop Sidebar */}
       <motion.aside
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
+        initial={{ x: -280 }}
+        animate={{ x: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="fixed top-0 left-0 h-screen w-64 bg-slate-900/80 backdrop-blur-xl border-r border-pink-500/20 flex flex-col z-40 hidden lg:flex"
+        className="fixed top-0 left-0 h-screen w-64 bg-slate-900/90 backdrop-blur-xl border-r border-pink-500/20 flex flex-col z-30 hidden lg:flex"
       >
         {/* Logo */}
         <div className="px-6 py-7 border-b border-pink-500/20">
-          <div className="flex items-center gap-2.5">
+          <Link to="/dashboard" className="flex items-center gap-2.5">
             <motion.div
               whileHover={{ scale: 1.05, rotate: 5 }}
               className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/25"
             >
-              <span className="text-white font-black text-lg">✦</span>
+              <Sparkles className="w-5 h-5 text-white" />
             </motion.div>
             <div>
               <div className="font-black text-slate-100 text-base leading-none">
@@ -69,58 +86,72 @@ export default function Layout({ children }) {
                 Send at Scale
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
-        {/* Nav */}
+        {/* Navigation */}
         <nav className="flex-1 px-3 py-6 flex flex-col gap-1.5">
           {navItems.map((item) => {
-            const active =
+            const isActive =
               location.pathname === item.path ||
               (item.path !== "/dashboard" &&
                 location.pathname.startsWith(item.path));
+            const Icon = item.icon;
+
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className="no-underline relative"
               >
-                {active && (
-                  <motion.div
-                    layoutId="nav-indicator"
-                    className="absolute inset-0 bg-gradient-to-r from-pink-500/15 to-rose-500/15 border border-pink-500/30 rounded-xl"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                  />
-                )}
-                <div
+                <motion.div
+                  whileHover={{ x: 5 }}
                   className={`relative flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
-                  ${active ? "text-pink-400" : "text-slate-400 hover:text-slate-200"}`}
+                    ${
+                      isActive
+                        ? "bg-gradient-to-r from-pink-500/15 to-rose-500/15 text-pink-400"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
                 >
-                  <span className="text-lg w-5 text-center">{item.icon}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-indicator"
+                      className="absolute inset-0 border border-pink-500/30 rounded-xl"
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.5,
+                      }}
+                    />
+                  )}
+                  <Icon className="w-5 h-5 relative z-10" />
                   <span
-                    className={`text-sm ${active ? "font-bold" : "font-medium"}`}
+                    className={`text-sm relative z-10 ${isActive ? "font-bold" : "font-medium"}`}
                   >
                     {item.label}
                   </span>
-                  {active && (
+                  {isActive && (
                     <motion.div
                       layoutId="active-dot"
                       className="absolute left-0 w-0.5 h-6 bg-gradient-to-b from-pink-500 to-rose-500 rounded-full"
                     />
                   )}
-                </div>
+                </motion.div>
               </Link>
             );
           })}
         </nav>
 
-        {/* User footer */}
+        {/* User Profile */}
         <div className="px-3 pb-4 border-t border-pink-500/20 pt-4">
           <div className="px-3 py-2.5 flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-pink-500/25">
-              <span className="text-white font-black text-sm">
-                {user?.name?.[0]?.toUpperCase()}
-              </span>
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-pink-500/25">
+                <span className="text-white font-black text-sm">
+                  {user?.name?.[0]?.toUpperCase()}
+                </span>
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-slate-200 text-sm font-semibold truncate">
@@ -131,14 +162,14 @@ export default function Layout({ children }) {
               </div>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <AnimatedButton
+            variant="ghost"
             onClick={handleLogout}
-            className="w-full py-2 rounded-xl border border-pink-500/30 text-slate-400 hover:text-rose-400 hover:border-rose-500/50 text-xs font-semibold transition-all duration-200 cursor-pointer bg-transparent"
+            icon={LogOut}
+            className="w-full justify-center"
           >
             Sign Out
-          </motion.button>
+          </AnimatedButton>
         </div>
       </motion.aside>
 
@@ -154,17 +185,17 @@ export default function Layout({ children }) {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
             />
             <motion.aside
-              initial={{ x: -280 }}
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: -280 }}
+              exit={{ x: -320 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-screen w-64 bg-slate-900/95 backdrop-blur-xl border-r border-pink-500/20 flex flex-col z-50 lg:hidden"
+              className="fixed top-0 left-0 h-screen w-72 bg-slate-900/95 backdrop-blur-xl border-r border-pink-500/20 flex flex-col z-50 lg:hidden"
             >
-              {/* Logo */}
+              {/* Header */}
               <div className="px-6 py-7 border-b border-pink-500/20 flex justify-between items-center">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                    <span className="text-white font-black text-lg">✦</span>
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <div className="font-black text-slate-100 text-base leading-none">
@@ -177,57 +208,52 @@ export default function Layout({ children }) {
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-slate-400 hover:text-pink-400"
+                  className="text-slate-400 hover:text-pink-400 transition-colors"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Nav */}
+              {/* Navigation */}
               <nav className="flex-1 px-3 py-6 flex flex-col gap-1.5">
                 {navItems.map((item) => {
-                  const active =
+                  const isActive =
                     location.pathname === item.path ||
                     (item.path !== "/dashboard" &&
                       location.pathname.startsWith(item.path));
+                  const Icon = item.icon;
+
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="no-underline relative"
+                      className="no-underline"
                     >
                       <div
-                        className={`relative flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
-                        ${active ? "bg-gradient-to-r from-pink-500/15 to-rose-500/15 text-pink-400" : "text-slate-400 hover:text-slate-200"}`}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
+                          ${
+                            isActive
+                              ? "bg-gradient-to-r from-pink-500/15 to-rose-500/15 text-pink-400 border border-pink-500/30"
+                              : "text-slate-400 hover:text-slate-200"
+                          }`}
                       >
-                        <span className="text-lg w-5 text-center">
-                          {item.icon}
-                        </span>
+                        <Icon className="w-5 h-5" />
                         <span
-                          className={`text-sm ${active ? "font-bold" : "font-medium"}`}
+                          className={`text-sm ${isActive ? "font-bold" : "font-medium"}`}
                         >
                           {item.label}
                         </span>
+                        {isActive && (
+                          <ChevronRight className="w-4 h-4 ml-auto" />
+                        )}
                       </div>
                     </Link>
                   );
                 })}
               </nav>
 
-              {/* User footer */}
+              {/* User Profile */}
               <div className="px-3 pb-4 border-t border-pink-500/20 pt-4">
                 <div className="px-3 py-2.5 flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
@@ -244,17 +270,17 @@ export default function Layout({ children }) {
                     </div>
                   </div>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <AnimatedButton
+                  variant="ghost"
                   onClick={() => {
                     handleLogout();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full py-2 rounded-xl border border-pink-500/30 text-slate-400 hover:text-rose-400 hover:border-rose-500/50 text-xs font-semibold transition-all duration-200 cursor-pointer bg-transparent"
+                  icon={LogOut}
+                  className="w-full justify-center"
                 >
                   Sign Out
-                </motion.button>
+                </AnimatedButton>
               </div>
             </motion.aside>
           </>
@@ -263,16 +289,18 @@ export default function Layout({ children }) {
 
       {/* Main Content */}
       <main className="lg:ml-64 min-h-screen">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto"
-        >
-          {children}
-        </motion.div>
+        <div className="p-4 pt-20 sm:p-6 lg:p-8">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="max-w-7xl mx-auto"
+          >
+            {children}
+          </motion.div>
+        </div>
       </main>
     </div>
   );
